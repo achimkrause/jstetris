@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<style>
+
+canvas {
+    border:1px solid #d3d3d3;
+    background-color: #f1f1f1;
+}
+
+
+
+
+</style>
+</head>
+<body onload="startGame()">
+
+<p id="score">Score: 0 </p>
+
+
+<script>
+
+
+function startGame() {
+    currentPiece=getPiece();
+    myGameArea.start();
+}
+
+
+
+var myGameArea = {
+    canvas : document.createElement("canvas"),
+    start : function() {
+        this.canvas.width = 200;
+        this.canvas.height = 500;
+        this.context = this.canvas.getContext("2d");
+        document.body.insertBefore(this.canvas, document.body.childNodes[0]);
+        this.frameNo = 0;
+        this.intervals = [setInterval(updateGameArea, 20), setInterval(tick, 300)];
+        window.addEventListener('keydown', function (e){ 
+             //console.debug("keyCode: "+e.keyCode);
+             if(e.keyCode == 37){
+                left();
+
+             }
+             else if(e.keyCode == 39){
+                right();
+             }
+             else if(e.keyCode == 38){
+                up();
+             }
+             if(e.keyCode == 40){
+                down();
+             }
+        })
+        },
+    clear : function() {
+        this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    },
+    stop : function() {
+        clearInterval(this.intervals[0]);
+        clearInterval(this.intervals[1]);
+    }
+}
+
+
+function updateGameArea(){
+    myGameArea.clear();
+    draw();
+}
+
+
+function draw(){
+    for(i=0; i<currentPiece.length; i+=1){
+        currentPiece[i].draw();
+    }
+    for(i=0; i<placedPoints.length; i+=1){
+        placedPoints[i].draw();
+    }   
+}
+
+function tick(){
+    var shiftedPiece = currentPiece.map(shift(0,1));
+    if(collide(shiftedPiece,placedPoints) || collideWall(shiftedPiece)){
+        placedPoints = placedPoints.concat(currentPiece);
+        var lines = checkLines();
+        handleScore(lines);
+        currentPiece = getPiece();
+        if(collide(currentPiece,placedPoints)){
+            myGameArea.stop();
+        }
+    }
+    else{
+        currentPiece = shiftedPiece;
+    }
+}
+
+function down(){
+    var cont = true;
+    var shiftedPiece;
+    while(cont){
+        shiftedPiece = currentPiece.map(shift(0,1));
+        if(collide(shiftedPiece, placedPoints) || collideWall(shiftedPiece)){
+            cont = false;
+        }
+        else{
+            currentPiece = shiftedPiece;
+        }
+    }
+}
+
+function handleScore(ls){
+   score += ls;
+   document.getElementById('score').innerHTML = "Score: "+score;
+}
+
+function left(){
+    var shiftedPiece = currentPiece.map(shift(-1,0));
+    if(!collide(shiftedPiece,placedPoints) && !collideWall(shiftedPiece)){
+        currentPiece = shiftedPiece;
+    }
+}
+
+function right(){
+    var shiftedPiece = currentPiece.map(shift(1,0));
+    if(!collide(shiftedPiece,placedPoints) && !collideWall(shiftedPiece)){
+        currentPiece = shiftedPiece;
+    }
+}
+
+function up(){
+    var rotatedPiece = rotate(currentPiece);
+    if(!collide(rotatedPiece,placedPoints) && !collideWall(rotatedPiece)){
+        currentPiece = rotatedPiece;
+    }
+}
+
+
+var currentPiece=[];
+var placedPoints=[];
+var score=0;
+
+function Point(x,y,col){
+    this.x=x;
+    this.y=y;
+    this.col = col;
+    this.draw = function(){
+        ctx = myGameArea.context;
+        ctx.fillStyle = col;
+        ctx.fillRect(this.x*20, this.y*20, 20, 20);
+    }
+}
+
+function collide(arr1, arr2){
+    for(i=0;i<arr1.length;i+=1){
+        for(j=0; j<arr2.length; j+=1){
+            if((arr1[i].x == arr2[j].x) && (arr1[i].y == arr2[j].y)){
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+function collideWall(arr1){
+    for(i=0; i<arr1.length;i+=1){
+        if(arr1[i].x<0 || arr1[i].x>9 || arr1[i].y>24){
+            return true;
+        }
+    }
+    return false;
+}
+
+function shift(x,y){
+    return function (point){
+        result = new Point(point.x + x, point.y+y, point.col);
+        return result;
+    }
+}
+
+function rotate(piece){
+    var pt = piece[0];
+    var transform = function (point){
+                      return new Point(pt.x - (point.y - pt.y), pt.y + (point.x - pt.x), point.col)};
+    return piece.map(transform);
+}
+
+var getPiece = (function() {
+                      var zpiece = [new Point(1,1,"red"), new Point(0,0,"red"), new Point(1,0,"red"),  new Point(2,1,"red")];
+                      var zpiece2 = [new Point(1,0,"yellow"), new Point(0,1,"yellow"), new Point(1,1,"yellow"),  new Point(2,0,"yellow")];
+                      var lpiece = [new Point(1,0,"blue"), new Point(0,0,"blue"), new Point(0,1,"blue"),  new Point(2,0,"blue")];
+                      var lpiece2 = [new Point(1,1, "green"), new Point(0,0, "green"), new Point(0,1, "green"),  new Point(2,1, "green")];
+                      var sqpiece = [new Point(1,1, "orange"), new Point(0,0, "orange"), new Point(0,1, "orange"),  new Point(1,0, "orange")];
+                      var longpiece = [new Point(2,0, "magenta"),  new Point(0,0, "magenta"), new Point(1,0, "magenta"), new Point(3,0, "magenta")];
+                      var tpiece = [new Point(1,1, "purple"), new Point(2,0, "purple"), new Point(0,0, "purple"), new Point(1,0, "purple")];
+
+                      var pieces = [zpiece, zpiece2, lpiece, lpiece2, sqpiece, longpiece, tpiece];
+
+                      return function () {return pieces[Math.floor(Math.random() * pieces.length)].map(shift(4,0))};
+})();
+
+function checkLines(){
+     var count = [];
+     var lines = 0;
+     for(i=0; i<25; i+=1){
+        count.push(0);
+     }
+     for(i=0; i<placedPoints.length; i+=1){
+        var y = placedPoints[i].y;
+        if(y>=0){
+            count[y]+=1;
+        }
+     }
+     var newPlacedPoints = [];
+
+     for(i=0; i<placedPoints.length; i+=1){
+        var y = placedPoints[i].y;
+        if(y<0){
+            break;
+        }
+        if(count[y] < 10){
+            var displace = 0;
+            for(j=y+1; j<25; j+=1){
+                if(count[j]==10){
+                    displace +=1;
+                }
+            }
+            newPlacedPoints.push(shift(0,displace)(placedPoints[i]));
+        }
+        else{
+            lines+=1;
+        }
+     }
+     placedPoints = newPlacedPoints;
+     return lines;
+}
+
+
+
+
+
+</script>    
+</body>
