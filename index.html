@@ -54,6 +54,27 @@ var myGameArea = {
                 down();
              }
         })
+        window.addEventListener('touchstart', function(e){
+            var dx = e.pageX - currentPiece[0].x;
+            var dy = e.pageY - currentPiece[0].y;
+
+            if(dx*dx + dy*dy <= 250){
+                up();
+            }
+            else if(dy < 0 && Math.abs(dy) >= Math.abs(dx)){
+                up();
+            }
+            else if(dy > 0 && Math.abs(dy) >= Math.abs(dx)){
+                down();
+            }
+            else if(dx > 0 && Math.abs(dx) >= Math.abs(dy)){
+                right();
+            }
+            else if(dx < 0 && Math.abs(dx) >= Math.abs(dy)){
+                left();
+            }
+
+        })
         },
     clear : function() {
         this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
