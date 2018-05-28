@@ -54,27 +54,32 @@ var myGameArea = {
                 down();
              }
         })
-        window.addEventListener('touchstart', function(e){
-            var dx = e.pageX - currentPiece[0].x;
-            var dy = e.pageY - currentPiece[0].y;
+        var click = function(e){
+            console.debug("click at "+e.pageX+", " + e.pageY);
 
-            if(dx*dx + dy*dy <= 250){
-                up();
-            }
-            else if(dy < 0 && Math.abs(dy) >= Math.abs(dx)){
-                up();
-            }
-            else if(dy > 0 && Math.abs(dy) >= Math.abs(dx)){
-                down();
-            }
-            else if(dx > 0 && Math.abs(dx) >= Math.abs(dy)){
+            var dx = e.pageX - 20*currentPiece[0].x;
+            var dy = e.pageY - 20*currentPiece[0].y;
+
+
+            console.debug("dx, dy = "+dx + ", "+dy);
+  
+
+            if(dx > 50){
                 right();
             }
-            else if(dx < 0 && Math.abs(dx) >= Math.abs(dy)){
+            else if(dx <-50){
                 left();
+            } 
+            else if(dy < 50){
+                up();
             }
+            else if(dy > 50){
+                down();
+            }}
 
-        })
+        window.addEventListener('touchstart', click);
+        window.addEventListener('mousedown', click);
+        
         },
     clear : function() {
         this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
